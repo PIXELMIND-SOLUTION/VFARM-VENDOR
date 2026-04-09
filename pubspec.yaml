@@ -1,0 +1,68 @@
+name: vendor_app
+description: Farmhouse Vendor App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & Design
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Networking
+  http: ^1.1.0
+  dio: ^5.4.0
+  
+  # Storage
+  shared_preferences: ^2.2.2
+  
+  # Navigation
+  go_router: ^13.0.0
+  
+  # Utilities
+  intl: ^0.18.1
+  image_picker: ^1.0.5
+  flutter_dotenv: ^5.1.0
+  
+  # Charts
+  fl_chart: ^0.66.0
+  
+  # Loading
+  shimmer: ^3.0.0
+  url_launcher: ^6.3.2
+  
+  # Notifications
+  # flutter_local_notifications: ^16.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.4  # ✅ Moved here
+
+# ✅ Launcher Icons Configuration (at ROOT level, NOT inside dev_dependencies)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/farmhouselogo.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#4CAF50"
+  adaptive_icon_foreground: "assets/farmhouselogo.png"
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/farmhouselogo.png
+  #   - assets/images/
+  #   - assets/icons/
+    - .env
