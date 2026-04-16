@@ -1180,8 +1180,9 @@ class _FarmhouseScreenState extends State<FarmhouseScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    farmhouse.active ? AppColors.error : AppColors.success,
+                backgroundColor: farmhouse.active
+                    ? const Color.fromARGB(255, 0, 0, 0)
+                    : const Color.fromARGB(255, 0, 0, 0),
               ),
               child: Text(farmhouse.active ? 'Deactivate' : 'Activate'),
             ),

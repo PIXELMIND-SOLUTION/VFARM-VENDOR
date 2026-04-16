@@ -141,7 +141,7 @@ class ContactScreen extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 1,
-          childAspectRatio: 1.7,
+          childAspectRatio: 1.4,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
