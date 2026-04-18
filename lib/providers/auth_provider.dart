@@ -119,6 +119,50 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteAccount() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final vendorId = SharedPrefService.getVendorId();
+      if (vendorId == null) {
+        _error = 'Vendor not found';
+        _setLoading(false);
+        return false;
+      }
+      // Call your API endpoint for deleting vendor account
+      final response = await _apiService.delete(
+        '/api/vendor/deletevendor/$vendorId',
+        requireAuth: true,
+      );
+
+      // Assuming your API returns a response with success flag
+      // Adjust this based on your actual API response structure
+      if (response['success'] == true || response['status'] == 'success') {
+        // Clear all user data from shared preferences
+        await SharedPrefService.clearUserData();
+
+        // Clear local state
+        _vendor = null;
+        _farmhouse = null;
+        _isLoggedIn = false;
+        _applicationId = null;
+
+        _setLoading(false);
+        notifyListeners();
+        return true;
+      } else {
+        _error = response['message'] ?? 'Failed to delete account';
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<ApplicationStatusResponse?> getApplicationStatus(
       String applicationId) async {
     _setLoading(true);

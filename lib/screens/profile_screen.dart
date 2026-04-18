@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:vendor_app/constants/api_constants.dart';
 import 'package:vendor_app/screens/contact_screen.dart';
 import '../providers/auth_provider.dart';
 import '../constants/app_colors.dart';
@@ -26,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 _buildProfileHeader(authProvider),
                 SizedBox(height: ResponsiveHelper.h(3)),
-                _buildMenuItems(context),
+                _buildMenuItems(context, authProvider),
                 SizedBox(height: ResponsiveHelper.h(3)),
                 _buildLogoutButton(context, authProvider),
               ],
@@ -93,20 +95,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItems(BuildContext context) {
+  Widget _buildMenuItems(BuildContext context, AuthProvider authProvider) {
     return Card(
       child: Column(
         children: [
           _buildMenuItem(
             icon: Icons.info_outline,
-            title: 'About',
-            subtitle: 'App version ${AppConstants.appVersion}',
-            onTap: () {
-              _showAboutDialog(context);
-            },
+            title: 'About Us',
+            subtitle: 'Checkout our profile',
+            onTap: () => _launchURL(ApiConstants.about),
           ),
           const Divider(height: 1),
-
           _buildMenuItem(
             icon: Icons.edit,
             title: 'Farmhouse Details',
@@ -131,21 +130,6 @@ class ProfileScreen extends StatelessWidget {
               );
             },
           ),
-          // const Divider(height: 1),
-          // _buildMenuItem(
-          //   icon: Icons.notifications,
-          //   title: 'Notifications',
-          //   subtitle: 'Manage notifications',
-          //   onTap: () {
-          //     // Navigate to notifications (coming soon)
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(
-          //         content: Text('Notifications feature coming soon!'),
-          //         duration: Duration(seconds: 2),
-          //       ),
-          //     );
-          //   },
-          // ),
           const Divider(height: 1),
           _buildMenuItem(
             icon: Icons.help_outline,
@@ -158,6 +142,28 @@ class ProfileScreen extends StatelessWidget {
               );
             },
           ),
+          const Divider(height: 1),
+          _buildMenuItem(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            subtitle: 'Read our privacy policy',
+            onTap: () => _launchURL(ApiConstants.privacyPolicyUrl),
+          ),
+          const Divider(height: 1),
+          _buildMenuItem(
+            icon: Icons.description_outlined,
+            title: 'Terms & Conditions',
+            subtitle: 'Read terms and conditions',
+            onTap: () => _launchURL(ApiConstants.termsAndConditionsUrl),
+          ),
+          const Divider(height: 1),
+          _buildMenuItem(
+            icon: Icons.delete_outline,
+            title: 'Delete Account',
+            subtitle: 'Permanently delete your account',
+            onTap: () => _showDeleteAccountConfirmation(context, authProvider),
+            isDestructive: true,
+          ),
         ],
       ),
     );
@@ -168,12 +174,18 @@ class ProfileScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool isDestructive = false,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(title),
+      leading: Icon(icon,
+          color: isDestructive ? AppColors.error : AppColors.primary),
+      title: Text(title,
+          style: TextStyle(
+            color: isDestructive ? AppColors.error : null,
+          )),
       subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Icon(Icons.chevron_right,
+          color: isDestructive ? AppColors.error : null),
       onTap: onTap,
     );
   }
@@ -215,6 +227,136 @@ class ProfileScreen extends StatelessWidget {
       },
       backgroundColor: AppColors.error,
     );
+  }
+
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+
+    try {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+    }
+  }
+
+  Future<void> _showDeleteAccountConfirmation(
+      BuildContext context, AuthProvider authProvider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Delete Account',
+          style: TextStyle(color: AppColors.error),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Are you sure you want to delete your account?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'This action is irreversible and will:',
+              style: TextStyle(fontSize: 13),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• Permanently delete all your personal data\n'
+              '• Remove all your farmhouse listings\n'
+              '• Delete your earnings history\n'
+              '• Cancel all active bookings\n'
+              '• You will lose access to your account forever',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _deleteAccount(context, authProvider);
+    }
+  }
+
+  Future<void> _deleteAccount(
+      BuildContext context, AuthProvider authProvider) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Call your API to delete account
+      final success = await authProvider.deleteAccount();
+
+      // Close loading dialog if it's still showing
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+      }
+
+      if (success && context.mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to login screen
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
+      } else if (context.mounted) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete account. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's still showing
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _showAboutDialog(BuildContext context) {

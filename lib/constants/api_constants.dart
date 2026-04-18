@@ -17,6 +17,11 @@ class ApiConstants {
       '/api/vendor/farmhouse/toggle-active';
   static const String inactiveDates = '/api/vendor/farmhouse/inactive-dates';
   static const String toggleSlot = '/api/vendor/farmhouse/slot';
+  static const String privacyPolicyUrl =
+      'https://v-farm-house-owner-policies.onrender.com/privacy-policy';
+  static const String termsAndConditionsUrl =
+      'https://v-farm-house-owner-policies.onrender.com/terms-and-conditions';
+  static const String about = 'https://varahiautomotives.com/';
 
   // Helper method to build URL
   static String getUrl(String endpoint,
