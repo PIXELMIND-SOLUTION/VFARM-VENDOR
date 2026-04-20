@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:vendor_app/screens/bookings_screen.dart';
+import 'package:vendor_app/widgets/global_back_control.dart';
 import '../providers/vendor_provider.dart';
 import '../constants/app_colors.dart';
 import '../widgets/loading_widget.dart';
@@ -54,39 +57,78 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Then update your _showExitConfirmation method:
+  void _showExitConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Do you want to exit the app?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              SystemNavigator.pop(); // ACTUALLY EXIT THE APP
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ResponsiveHelper.init(context);
 
-    return Consumer<VendorProvider>(
-      builder: (context, vendorProvider, child) {
-        if (_isLoading) {
-          return const LoadingWidget();
-        }
-
-        final dashboard = vendorProvider.dashboard;
-
-        return RefreshIndicator(
-          onRefresh: _refreshData,
-          child: _isRefreshing
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  padding: EdgeInsets.all(ResponsiveHelper.w(4)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWelcomeHeader(dashboard),
-                      SizedBox(height: ResponsiveHelper.h(3)),
-                      _buildStatisticsGrid(context, dashboard),
-                      SizedBox(height: ResponsiveHelper.h(3)),
-                      _buildRecentBookingsSection(context, dashboard),
-                      SizedBox(height: ResponsiveHelper.h(3)),
-                      _buildRevenueChart(context, dashboard),
-                    ],
-                  ),
-                ),
-        );
+    return GlobalBackControl(
+      onBackPressed: () {
+        // Optional: Add custom back behavior
+        // For example, show confirmation dialog before exiting
+        _showExitConfirmation();
       },
+      child: Consumer<VendorProvider>(
+        builder: (context, vendorProvider, child) {
+          if (_isLoading) {
+            return const LoadingWidget();
+          }
+
+          final dashboard = vendorProvider.dashboard;
+
+          return RefreshIndicator(
+            onRefresh: _refreshData,
+            child: _isRefreshing
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: EdgeInsets.all(ResponsiveHelper.w(4)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildWelcomeHeader(dashboard),
+                        SizedBox(height: ResponsiveHelper.h(3)),
+                        _buildStatisticsGrid(context, dashboard),
+                        SizedBox(height: ResponsiveHelper.h(3)),
+                        _buildRecentBookingsSection(context, dashboard),
+                        SizedBox(height: ResponsiveHelper.h(3)),
+                        _buildRevenueChart(context, dashboard),
+                      ],
+                    ),
+                  ),
+          );
+        },
+      ),
     );
   }
 
@@ -160,36 +202,43 @@ class _HomeScreenState extends State<HomeScreen> {
               dashboard?.statistics.totalBookings.toString() ?? '0',
               Icons.book_online,
               AppColors.primary,
+              () => _navigateToBookings(0), // All tab
             ),
             _buildStatCard(
               'Total Revenue',
               '₹${dashboard?.statistics.totalRevenue.toStringAsFixed(0) ?? '0'}',
               Icons.currency_rupee,
               AppColors.secondary,
+              null, // No navigation for revenue
             ),
             _buildStatCard(
               'Today\'s Bookings',
               dashboard?.statistics.todayBookings.toString() ?? '0',
               Icons.today,
               AppColors.info,
+              () => _navigateToBookings(0), // All tab (or create Today tab)
             ),
             _buildStatCard(
               'Upcoming',
               dashboard?.statistics.upcomingBookings.toString() ?? '0',
               Icons.upcoming,
               AppColors.warning,
+              () => _navigateToBookings(1), // Upcoming tab
             ),
             _buildStatCard(
               'Completed',
               dashboard?.statistics.completedBookings.toString() ?? '0',
               Icons.check_circle,
               AppColors.success,
+              () => _navigateToBookings(3), // Completed tab
             ),
             _buildStatCard(
               'Cancelled',
               dashboard?.statistics.cancelledBookings.toString() ?? '0',
               Icons.cancel,
               AppColors.error,
+              () => _navigateToBookings(
+                  0), // All tab with filter? Or create Cancelled tab
             ),
           ],
         ),
@@ -197,43 +246,61 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: EdgeInsets.all(ResponsiveHelper.w(3)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+  void _navigateToBookings(int tabIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingsScreen(initialTabIndex: tabIndex),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: ResponsiveHelper.w(6), color: color),
-          SizedBox(height: ResponsiveHelper.h(1)),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: ResponsiveHelper.sp(5),
-              fontWeight: FontWeight.bold,
+    );
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    VoidCallback? onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap, // Make it clickable
+
+      child: Container(
+        padding: EdgeInsets.all(ResponsiveHelper.w(3)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-          ),
-          SizedBox(height: ResponsiveHelper.h(0.5)),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: ResponsiveHelper.sp(3),
-              color: AppColors.textSecondary,
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: ResponsiveHelper.w(6), color: color),
+            SizedBox(height: ResponsiveHelper.h(1)),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.sp(5),
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            SizedBox(height: ResponsiveHelper.h(0.5)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.sp(3),
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -410,29 +477,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveHelper.w(2),
-                        vertical: ResponsiveHelper.h(0.5),
-                      ),
-                      decoration: BoxDecoration(
-                        color: recentBooking.paymentStatus == 'completed'
-                            ? AppColors.success.withOpacity(0.1)
-                            : AppColors.warning.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        recentBooking.paymentStatus == 'completed'
-                            ? 'Paid'
-                            : 'Pending',
-                        style: TextStyle(
-                          fontSize: ResponsiveHelper.sp(2.8),
-                          color: recentBooking.paymentStatus == 'completed'
-                              ? AppColors.success
-                              : AppColors.warning,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     horizontal: ResponsiveHelper.w(2),
+                    //     vertical: ResponsiveHelper.h(0.5),
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: recentBooking.paymentStatus == 'completed'
+                    //         ? AppColors.success.withOpacity(0.1)
+                    //         : AppColors.warning.withOpacity(0.1),
+                    //     borderRadius: BorderRadius.circular(20),
+                    //   ),
+                    //   child: Text(
+                    //     recentBooking.paymentStatus == 'completed'
+                    //         ? 'Paid'
+                    //         : 'Pending',
+                    //     style: TextStyle(
+                    //       fontSize: ResponsiveHelper.sp(2.8),
+                    //       color: recentBooking.paymentStatus == 'completed'
+                    //           ? AppColors.success
+                    //           : AppColors.warning,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ],

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vendor_app/constants/api_constants.dart';
 import 'package:vendor_app/screens/contact_screen.dart';
+import 'package:vendor_app/screens/home_screen.dart';
+import 'package:vendor_app/screens/main_screen.dart';
 import '../providers/auth_provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
@@ -19,23 +21,31 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     ResponsiveHelper.init(context);
 
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Scaffold(
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(ResponsiveHelper.w(4)),
-            child: Column(
-              children: [
-                _buildProfileHeader(authProvider),
-                SizedBox(height: ResponsiveHelper.h(3)),
-                _buildMenuItems(context, authProvider),
-                SizedBox(height: ResponsiveHelper.h(3)),
-                _buildLogoutButton(context, authProvider),
-              ],
-            ),
-          ),
-        );
+    return WillPopScope(
+      onWillPop: () async {
+        // Navigate to home screen when back button is pressed
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        return false; // Prevent default back behavior
       },
+      child: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          return Scaffold(
+            body: SingleChildScrollView(
+              padding: EdgeInsets.all(ResponsiveHelper.w(4)),
+              child: Column(
+                children: [
+                  _buildProfileHeader(authProvider),
+                  SizedBox(height: ResponsiveHelper.h(3)),
+                  _buildMenuItems(context, authProvider),
+                  SizedBox(height: ResponsiveHelper.h(3)),
+                  _buildLogoutButton(context, authProvider),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -109,7 +119,7 @@ class ProfileScreen extends StatelessWidget {
           _buildMenuItem(
             icon: Icons.edit,
             title: 'Farmhouse Details',
-            subtitle: 'View and update farmhouse',
+            subtitle: 'View and edit farmhouse',
             onTap: () {
               Navigator.push(
                 context,

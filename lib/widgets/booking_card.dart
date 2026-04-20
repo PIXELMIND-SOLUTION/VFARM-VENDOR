@@ -11,6 +11,7 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("jjjjjjjjjjjjjjjjjjjjjjj${booking.isPaymentCompleted}");
     ResponsiveHelper.init(context);
 
     return Container(
@@ -139,27 +140,27 @@ class BookingCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveHelper.w(2),
-                        vertical: ResponsiveHelper.h(0.5),
-                      ),
-                      decoration: BoxDecoration(
-                        color: booking.isPaymentCompleted
-                            ? AppColors.success.withOpacity(0.1)
-                            : AppColors.warning.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        booking.isPaymentCompleted ? 'Paid' : 'Pending',
-                        style: TextStyle(
-                          fontSize: ResponsiveHelper.sp(2.8),
-                          color: booking.isPaymentCompleted
-                              ? AppColors.success
-                              : AppColors.warning,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     horizontal: ResponsiveHelper.w(2),
+                    //     vertical: ResponsiveHelper.h(0.5),
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: booking.isPaymentCompleted
+                    //         ? AppColors.success.withOpacity(0.1)
+                    //         : AppColors.warning.withOpacity(0.1),
+                    //     borderRadius: BorderRadius.circular(20),
+                    //   ),
+                    //   child: Text(
+                    //     booking.isPaymentCompleted ? 'Paid' : 'Pending',
+                    //     style: TextStyle(
+                    //       fontSize: ResponsiveHelper.sp(2.8),
+                    //       color: booking.isPaymentCompleted
+                    //           ? AppColors.success
+                    //           : AppColors.warning,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ],

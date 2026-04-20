@@ -1,332 +1,7 @@
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import '../providers/vendor_provider.dart';
-// import '../constants/app_colors.dart';
-// import '../widgets/loading_widget.dart';
-// import '../utils/responsive_helper.dart';
-// import '../models/farmhouse_model.dart';
-
-// class FarmhouseScreen extends StatefulWidget {
-//   const FarmhouseScreen({super.key});
-
-//   @override
-//   State<FarmhouseScreen> createState() => _FarmhouseScreenState();
-// }
-
-// class _FarmhouseScreenState extends State<FarmhouseScreen> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _loadData();
-//     });
-//   }
-
-//   Future<void> _loadData() async {
-//     final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
-//     await vendorProvider.getFarmhouse();
-//   }
-
-//   Future<void> _refreshData() async {
-//     final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
-//     await vendorProvider.getFarmhouse();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     ResponsiveHelper.init(context);
-
-//     return Consumer<VendorProvider>(
-//       builder: (context, vendorProvider, child) {
-//         // Get farmhouse safely
-//         final farmhouse = vendorProvider.farmhouse;
-//         final isLoading = vendorProvider.isLoading;
-
-//         // Show loading
-//         if (isLoading && farmhouse == null) {
-//           return const Center(child: CircularProgressIndicator());
-//         }
-
-//         // Show error if farmhouse is null and not loading
-//         if (farmhouse == null) {
-//           return Center(
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 const Icon(Icons.error_outline,
-//                     size: 64, color: AppColors.error),
-//                 const SizedBox(height: 16),
-//                 Text(
-//                   'Failed to load farmhouse data',
-//                   style: TextStyle(fontSize: ResponsiveHelper.sp(4)),
-//                 ),
-//                 const SizedBox(height: 16),
-//                 ElevatedButton(
-//                   onPressed: _loadData,
-//                   child: const Text('Retry'),
-//                 ),
-//               ],
-//             ),
-//           );
-//         }
-
-//         // Show data - now farmhouse is guaranteed not null
-//         return RefreshIndicator(
-//           onRefresh: _refreshData,
-//           child: SingleChildScrollView(
-//             padding: EdgeInsets.all(ResponsiveHelper.w(4)),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 _buildStatusToggle(context, farmhouse),
-//                 const SizedBox(height: 16),
-//                 _buildFarmhouseDetails(farmhouse),
-//               ],
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   Widget _buildStatusToggle(BuildContext context, FarmhouseModel farmhouse) {
-//     return Container(
-//       padding: EdgeInsets.all(ResponsiveHelper.w(3)),
-//       decoration: BoxDecoration(
-//         color: farmhouse.active
-//             ? AppColors.success.withOpacity(0.1)
-//             : AppColors.error.withOpacity(0.1),
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       child: Row(
-//         children: [
-//           // Status icon and text - wrapped with Expanded
-//           Expanded(
-//             child: Row(
-//               children: [
-//                 Icon(
-//                   farmhouse.active ? Icons.check_circle : Icons.cancel,
-//                   color: farmhouse.active ? AppColors.success : AppColors.error,
-//                 ),
-//                 const SizedBox(width: 8),
-//                 Text(
-//                   farmhouse.active ? 'Active' : 'Inactive',
-//                   style: TextStyle(
-//                     fontWeight: FontWeight.bold,
-//                     color:
-//                         farmhouse.active ? AppColors.success : AppColors.error,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//           // Fixed width button to prevent infinite width error
-//           SizedBox(
-//             width: 120,
-//             child: ElevatedButton(
-//               onPressed: () => _showToggleDialog(context, farmhouse),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: farmhouse.active
-//                     ? const Color.fromARGB(255, 255, 255, 255)
-//                     : const Color.fromARGB(255, 255, 255, 255),
-//               ),
-//               child: Text(farmhouse.active ? 'Deactivate' : 'Activate'),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildFarmhouseDetails(FarmhouseModel farmhouse) {
-//     return Card(
-//       child: Padding(
-//         padding: EdgeInsets.all(ResponsiveHelper.w(4)),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Name
-//             Text(
-//               farmhouse.name,
-//               style: TextStyle(
-//                 fontSize: ResponsiveHelper.sp(5),
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 8),
-
-//             // Price and Rating
-//             Row(
-//               children: [
-//                 const Icon(Icons.star, size: 16, color: AppColors.warning),
-//                 const SizedBox(width: 4),
-//                 Text(farmhouse.rating.toString()),
-//                 const Spacer(),
-//                 Text(
-//                   '₹${farmhouse.price}/day',
-//                   style: TextStyle(
-//                     fontSize: ResponsiveHelper.sp(4.5),
-//                     fontWeight: FontWeight.bold,
-//                     color: AppColors.primary,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//             const SizedBox(height: 12),
-
-//             // Address
-//             Row(
-//               children: [
-//                 const Icon(Icons.location_on, size: 16, color: AppColors.grey),
-//                 const SizedBox(width: 4),
-//                 Expanded(
-//                   child: Text(
-//                     farmhouse.address,
-//                     style: TextStyle(fontSize: ResponsiveHelper.sp(3.5)),
-//                   ),
-//                 ),
-//               ],
-//             ),
-
-//             // Description
-//             if (farmhouse.description != null &&
-//                 farmhouse.description!.isNotEmpty) ...[
-//               const SizedBox(height: 12),
-//               Text(
-//                 farmhouse.description!,
-//                 style: TextStyle(fontSize: ResponsiveHelper.sp(3.5)),
-//               ),
-//             ],
-
-//             const SizedBox(height: 16),
-//             const Divider(),
-//             const SizedBox(height: 8),
-
-//             // Amenities
-//             Text(
-//               'Amenities',
-//               style: TextStyle(
-//                 fontSize: ResponsiveHelper.sp(4),
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 8),
-//             if (farmhouse.amenities.isEmpty)
-//               Text(
-//                 'No amenities listed',
-//                 style: TextStyle(
-//                   fontSize: ResponsiveHelper.sp(3.5),
-//                   color: AppColors.textSecondary,
-//                 ),
-//               )
-//             else
-//               Wrap(
-//                 spacing: 8,
-//                 runSpacing: 8,
-//                 children: farmhouse.amenities.map((amenity) {
-//                   return Chip(
-//                     label: Text(amenity),
-//                     backgroundColor: AppColors.primary.withOpacity(0.1),
-//                   );
-//                 }).toList(),
-//               ),
-
-//             const SizedBox(height: 16),
-//             const Divider(),
-//             const SizedBox(height: 8),
-
-//             // Time Slots
-//             Text(
-//               'Time Slots',
-//               style: TextStyle(
-//                 fontSize: ResponsiveHelper.sp(4),
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 8),
-//             if (farmhouse.timePrices.isEmpty)
-//               Text(
-//                 'No time slots configured',
-//                 style: TextStyle(
-//                   fontSize: ResponsiveHelper.sp(3.5),
-//                   color: AppColors.textSecondary,
-//                 ),
-//               )
-//             else
-//               ...farmhouse.timePrices.map((slot) {
-//                 return ListTile(
-//                   leading: const Icon(Icons.access_time),
-//                   title: Text(slot.label),
-//                   subtitle: Text(slot.timing),
-//                   trailing: Text('₹${slot.price}'),
-//                   dense: true,
-//                 );
-//               }),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _showToggleDialog(BuildContext context, FarmhouseModel farmhouse) {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: Text(farmhouse.active
-//               ? 'Deactivate Farmhouse?'
-//               : 'Activate Farmhouse?'),
-//           content: Text(
-//             farmhouse.active
-//                 ? 'Are you sure you want to deactivate your farmhouse? This will make it unavailable for booking.'
-//                 : 'Are you sure you want to activate your farmhouse? This will make it available for booking.',
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(context),
-//               child: const Text('Cancel'),
-//             ),
-//             SizedBox(
-//               width: 100,
-//               child: ElevatedButton(
-//                 onPressed: () async {
-//                   Navigator.pop(context);
-//                   final provider =
-//                       Provider.of<VendorProvider>(context, listen: false);
-//                   final success = await provider.toggleFarmhouseActive(
-//                     active: !farmhouse.active,
-//                   );
-//                   if (context.mounted) {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       SnackBar(
-//                         content: Text(
-//                             success ? 'Status updated' : 'Operation failed'),
-//                         backgroundColor:
-//                             success ? AppColors.success : AppColors.error,
-//                       ),
-//                     );
-//                     if (success) {
-//                       _refreshData();
-//                     }
-//                   }
-//                 },
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: farmhouse.active
-//                       ? AppColors.error
-//                       : const Color.fromARGB(255, 255, 255, 255),
-//                 ),
-//                 child: Text(farmhouse.active ? 'Deactivate' : 'Activate'),
-//               ),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vendor_app/screens/home_screen.dart';
+import 'package:vendor_app/screens/main_screen.dart';
 import '../providers/vendor_provider.dart';
 import '../constants/app_colors.dart';
 import '../widgets/loading_widget.dart';
@@ -364,54 +39,62 @@ class _FarmhouseScreenState extends State<FarmhouseScreen> {
   Widget build(BuildContext context) {
     ResponsiveHelper.init(context);
 
-    return Consumer<VendorProvider>(
-      builder: (context, vendorProvider, child) {
-        final farmhouse = vendorProvider.farmhouse;
-        final isLoading = vendorProvider.isLoading;
+    return WillPopScope(
+      onWillPop: () async {
+        // Navigate to home screen when back button is pressed
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        return false; // Prevent default back behavior
+      },
+      child: Consumer<VendorProvider>(
+        builder: (context, vendorProvider, child) {
+          final farmhouse = vendorProvider.farmhouse;
+          final isLoading = vendorProvider.isLoading;
 
-        if (isLoading && farmhouse == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
+          if (isLoading && farmhouse == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        if (farmhouse == null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline,
-                    size: 64, color: AppColors.error),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load farmhouse data',
-                  style: TextStyle(fontSize: ResponsiveHelper.sp(4)),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadData,
-                  child: const Text('Retry'),
-                ),
-              ],
+          if (farmhouse == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 64, color: AppColors.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load farmhouse data',
+                    style: TextStyle(fontSize: ResponsiveHelper.sp(4)),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadData,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: _refreshData,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(ResponsiveHelper.w(4)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatusToggle(context, farmhouse),
+                  const SizedBox(height: 16),
+                  _buildFarmhouseDetails(farmhouse),
+                  const SizedBox(height: 16),
+                  _buildTimeSlotsSection(farmhouse),
+                ],
+              ),
             ),
           );
-        }
-
-        return RefreshIndicator(
-          onRefresh: _refreshData,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(ResponsiveHelper.w(4)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatusToggle(context, farmhouse),
-                const SizedBox(height: 16),
-                _buildFarmhouseDetails(farmhouse),
-                const SizedBox(height: 16),
-                _buildTimeSlotsSection(farmhouse),
-              ],
-            ),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 

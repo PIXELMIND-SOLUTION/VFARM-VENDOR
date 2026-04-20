@@ -132,7 +132,7 @@ class AuthProvider extends ChangeNotifier {
       }
       // Call your API endpoint for deleting vendor account
       final response = await _apiService.delete(
-        '/api/vendor/deletevendor/$vendorId',
+        'api/vendor/deletevendor/$vendorId',
         requireAuth: true,
       );
 
