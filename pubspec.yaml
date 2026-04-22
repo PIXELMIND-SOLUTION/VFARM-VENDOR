@@ -39,6 +39,7 @@ dependencies:
   # Loading
   shimmer: ^3.0.0
   url_launcher: ^6.3.2
+  geolocator: ^14.0.2
   
   # Notifications
   # flutter_local_notifications: ^16.3.0

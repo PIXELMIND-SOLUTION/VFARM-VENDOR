@@ -204,13 +204,13 @@ class _HomeScreenState extends State<HomeScreen> {
               AppColors.primary,
               () => _navigateToBookings(0), // All tab
             ),
-            _buildStatCard(
-              'Total Revenue',
-              '₹${dashboard?.statistics.totalRevenue.toStringAsFixed(0) ?? '0'}',
-              Icons.currency_rupee,
-              AppColors.secondary,
-              null, // No navigation for revenue
-            ),
+            // _buildStatCard(
+            //   'Total Revenue',
+            //   '₹${dashboard?.statistics.totalRevenue.toStringAsFixed(0) ?? '0'}',
+            //   Icons.currency_rupee,
+            //   AppColors.secondary,
+            //   null, // No navigation for revenue
+            // ),
             _buildStatCard(
               'Today\'s Bookings',
               dashboard?.statistics.todayBookings.toString() ?? '0',
@@ -232,14 +232,14 @@ class _HomeScreenState extends State<HomeScreen> {
               AppColors.success,
               () => _navigateToBookings(3), // Completed tab
             ),
-            _buildStatCard(
-              'Cancelled',
-              dashboard?.statistics.cancelledBookings.toString() ?? '0',
-              Icons.cancel,
-              AppColors.error,
-              () => _navigateToBookings(
-                  0), // All tab with filter? Or create Cancelled tab
-            ),
+            // _buildStatCard(
+            //   'Cancelled',
+            //   dashboard?.statistics.cancelledBookings.toString() ?? '0',
+            //   Icons.cancel,
+            //   AppColors.error,
+            //   () => _navigateToBookings(
+            //       0), // All tab with filter? Or create Cancelled tab
+            // ),
           ],
         ),
       ],
@@ -303,6 +303,23 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return Colors.green;
+      case 'partial':
+        return Colors.orange;
+      case 'pending':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String formatStatus(String status) {
+    return status[0].toUpperCase() + status.substring(1);
   }
 
   Widget _buildRecentBookingsSection(
@@ -461,20 +478,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total Amount',
+                          'Payment Status: ${formatStatus(recentBooking.paymentStatus ?? '')}',
                           style: TextStyle(
                             fontSize: ResponsiveHelper.sp(3),
-                            color: AppColors.textSecondary,
+                            color: getStatusColor(
+                                recentBooking.paymentStatus ?? ''),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Text(
-                          '₹${recentBooking.totalAmount.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: ResponsiveHelper.sp(4.5),
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                        // Text(
+                        //   '${recentBooking.paymentStatus}',
+                        //   style: TextStyle(
+                        //     fontSize: ResponsiveHelper.sp(4.5),
+                        //     fontWeight: FontWeight.bold,
+                        //     color: AppColors.primary,
+                        //   ),
+                        // ),
                       ],
                     ),
                     // Container(
