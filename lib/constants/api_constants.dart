@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiConstants {
   // Base URL - Load from .env file
   static String get baseUrl =>
-      dotenv.env['API_BASE_URL'] ?? 'http://31.97.206.144:5124/';
+      dotenv.env['API_BASE_URL'] ?? 'https://backend.vfarmstays.com/';
 
   // API Endpoints
   static const String vendorLogin = '/api/vendor/login';
