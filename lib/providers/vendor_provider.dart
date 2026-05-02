@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/shared_pref_service.dart';
@@ -90,6 +93,92 @@ class VendorProvider extends ChangeNotifier {
       _setLoading(false);
       notifyListeners(); // Notify even on error
       return null;
+    }
+  }
+
+  Future<bool> updateFarmhouseWithMedia({
+    required Map<String, String> fields,
+    List<File>? newImages,
+    List<String>? imagesToKeep,
+    File? videoFile,
+    bool? deleteVideo,
+  }) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final vendorId = SharedPrefService.getVendorId();
+      if (vendorId == null) {
+        _error = 'Vendor not found';
+        _setLoading(false);
+        return false;
+      }
+
+      // Prepare fields
+      final requestFields = Map<String, String>.from(fields);
+
+      // Add images to keep as JSON string
+      if (imagesToKeep != null && imagesToKeep.isNotEmpty) {
+        requestFields['existingImages'] = jsonEncode(imagesToKeep);
+        print("📸 Images to keep: ${requestFields['existingImages']}");
+      } else if (imagesToKeep != null && imagesToKeep.isEmpty) {
+        // Send empty array to clear all images
+        requestFields['existingImages'] = jsonEncode([]);
+        print("📸 Clearing all existing images");
+      }
+
+      // Add delete video flag
+      if (deleteVideo == true) {
+        requestFields['deleteVideo'] = 'true';
+        print("🎬 Deleting existing video");
+      }
+
+      // Print request details
+      print("\n========== UPDATE FARMPLACE REQUEST ==========");
+      print("📍 Endpoint: api/vendor/farmhouse/$vendorId");
+      print("📝 Fields:");
+      requestFields.forEach((key, value) {
+        print("   $key: $value");
+      });
+      print("🖼️ New Images: ${newImages?.length ?? 0} files");
+      if (newImages != null && newImages.isNotEmpty) {
+        for (int i = 0; i < newImages.length; i++) {
+          print("   Image $i: ${newImages[i].path.split('/').last}");
+        }
+      }
+      print(
+          "🎬 Video File: ${videoFile != null ? videoFile.path.split('/').last : 'None'}");
+      print("=============================================\n");
+
+      final response = await _apiService.putMultipart(
+        'api/vendor/farmhouse/$vendorId',
+        fields: requestFields,
+        imageFiles: newImages,
+        videoFile: videoFile,
+        requireAuth: true,
+      );
+
+      // Print response details
+      print("\n========== UPDATE FARMPLACE RESPONSE ==========");
+      print("✅ Response: $response");
+      print("=============================================\n");
+
+      if (response['success'] == true) {
+        print("✅ Farmhouse updated successfully!");
+        await getFarmhouse(); // Refresh farmhouse data
+        _setLoading(false);
+        return true;
+      } else {
+        print("❌ Update failed: ${response['message']}");
+        _error = response['message'] ?? 'Update failed';
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error in updateFarmhouseWithMedia: $e");
+      _error = e.toString();
+      _setLoading(false);
+      return false;
     }
   }
 

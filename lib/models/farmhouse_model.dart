@@ -14,6 +14,10 @@ class FarmhouseModel {
   final Location? location;
   final List<InactiveDate> inactiveDates;
   final DateTime createdAt;
+  final String? video;
+  final int? noOfPersons;
+  final double lat;
+  final double lng;
 
   FarmhouseModel({
     required this.id,
@@ -31,11 +35,26 @@ class FarmhouseModel {
     this.location,
     required this.inactiveDates,
     required this.createdAt,
+    this.video,
+    this.noOfPersons,
+    required this.lat,
+    required this.lng,
   });
 
   factory FarmhouseModel.fromJson(Map<String, dynamic> json) {
+    double lat = 0.0;
+    double lng = 0.0;
+    if (json['location'] != null && json['location']['coordinates'] != null) {
+      final coords = json['location']['coordinates'] as List;
+      if (coords.length >= 2) {
+        lng = (coords[0] as num).toDouble(); // longitude
+        lat = (coords[1] as num).toDouble(); // latitude
+      }
+    }
     return FarmhouseModel(
       id: json['_id'] ?? '',
+      lat: lat,
+      lng: lng,
       name: json['name'] ?? '',
       images: json['images'] != null ? List<String>.from(json['images']) : [],
       address: json['address'] ?? '',
@@ -64,6 +83,8 @@ class FarmhouseModel {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
+      video: json['video'],
+      noOfPersons: json['noOfPersons'] ?? 0,
     );
   }
 
@@ -84,6 +105,12 @@ class FarmhouseModel {
       'location': location?.toJson(),
       'inactiveDates': inactiveDates.map((e) => e.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
+      'video': video,
+      'noOfPersons': noOfPersons,
+      'location': {
+        'type': 'Point',
+        'coordinates': [lng, lat],
+      },
     };
   }
 }
